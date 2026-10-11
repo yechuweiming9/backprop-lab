@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="BP 反向传播算法交互式学习实验室" />
+  <title>Backprop Lab · BP反向传播学习实验室</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#top"><span class="brand-mark"><i></i><i></i><i></i></span><span>BACKPROP <em>LAB</em></span></a>
+    <nav><a href="#explore">探索</a><a href="#how">原理</a><a href="#glossary">术语</a></nav>
+    <div class="top-meta"><span class="status-dot"></span> INTERACTIVE · 01</div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">A VISUAL FIELD GUIDE TO LEARNING</p>
+        <h1>让机器<br><span>学会犯错。</span></h1>
+        <p class="hero-lede">从一次预测出发，沿着误差的反方向调整每个权重。用手操作一颗神经元，直观看见 BP 算法如何把“错”变成“更接近答案”。</p>
+        <a class="scroll-cue" href="#explore"><span>↓</span> SCROLL TO RUN THE EXPERIMENT</a>
+      </div>
+      <div class="hero-visual" aria-label="神经网络动画示意图">
+        <div class="orb orb-a"></div><div class="orb orb-b"></div>
+        <canvas id="heroCanvas"></canvas>
+        <div class="hero-label label-input">INPUT <b>x</b></div>
+        <div class="hero-label label-weight">WEIGHT <b>w</b></div>
+        <div class="hero-label label-output">OUTPUT <b>ŷ</b></div>
+      </div>
+    </section>
+
+    <section id="explore" class="lab-section">
+      <div class="section-intro"><p class="eyebrow">01 / LIVE EXPERIMENT</p><h2>一颗神经元，<br><i>一次学习。</i></h2><p>目标值固定为 <strong>1.00</strong>。调整参数，观察模型如何一点点靠近它。</p></div>
+      <div class="lab-grid">
+        <div class="control-panel glass-card">
+          <div class="panel-head"><span>PARAMETERS</span><span class="mono">STEP <b id="stepCount">00</b></span></div>
+          <div class="control-row"><div><label for="inputRange">输入值 <span>x</span></label><p>喂给神经元的信号</p></div><output id="inputOut">0.80</output></div>
+          <input id="inputRange" type="range" min="0" max="1" step="0.01" value="0.8">
+          <div class="control-row"><div><label for="weightRange">权重 <span>w</span></label><p>信号的重要程度</p></div><output id="weightOut">0.25</output></div>
+          <input id="weightRange" type="range" min="-1" max="1" step="0.01" value="0.25">
+          <div class="control-row"><div><label for="biasRange">偏置 <span>b</span></label><p>神经元的基础倾向</p></div><output id="biasOut">0.10</output></div>
+          <input id="biasRange" type="range" min="-1" max="1" step="0.01" value="0.1">
+          <div class="control-row"><div><label for="lrRange">学习率 <span>η</span></label><p>每次修正的步幅</p></div><output id="lrOut">0.40</output></div>
+          <input id="lrRange" type="range" min="0.05" max="1" step="0.05" value="0.4">
+          <div class="button-row"><button id="trainBtn" class="primary-btn">训练一步 <span>↗</span></button><button id="resetBtn" class="ghost-btn">重置</button></div>
+        </div>
+        <div class="visual-panel glass-card">
+          <div class="panel-head"><span>FORWARD → BACKWARD</span><span class="live-pill"><i></i> LIVE</span></div>
+          <div class="neuron-stage"><canvas id="labCanvas"></canvas><div class="node node-input"><span class="node-kicker">INPUT</span><b id="nodeX">0.80</b></div><div class="node node-sum"><span class="node-kicker">Σ + σ</span><b id="nodeZ">0.30</b></div><div class="node node-output"><span class="node-kicker">PREDICTION</span><b id="nodeY">0.30</b></div><div class="edge-tag tag-w">w = <span id="edgeW">0.25</span></div><div class="edge-tag tag-b">b = <span id="edgeB">0.10</span></div></div>
+          <div class="metrics"><div><span>目标值</span><b>1.00</b></div><div><span>当前误差</span><b id="lossMetric">0.49</b></div><div><span>梯度方向</span><b id="gradMetric">→ 增大</b></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="how-section"><div class="section-intro"><p class="eyebrow">02 / THE LOOP</p><h2>BP 的三步<br><i>小循环。</i></h2></div><div class="steps"><article><span class="step-no">01</span><h3>前向传播</h3><p>输入乘上权重，加上偏置，经过激活函数，得到预测值。</p><code>ŷ = σ(wx + b)</code></article><article><span class="step-no">02</span><h3>计算误差</h3><p>把预测值与目标值比较，误差告诉我们离答案还有多远。</p><code>L = ½(y − ŷ)²</code></article><article><span class="step-no">03</span><h3>反向更新</h3><p>沿着让误差变小的方向，微调权重和偏置，再来一次。</p><code>w ← w − η · ∂L/∂w</code></article></div></section>
+
+    <section id="glossary" class="glossary-section"><div><p class="eyebrow">03 / KEEP IN MIND</p><h2>把抽象的词，<br><i>变成手感。</i></h2></div><div class="glossary-grid"><div><span>x</span><p><b>输入</b> 你给模型看的特征。</p></div><div><span>w</span><p><b>权重</b> 模型学到的重要程度。</p></div><div><span>η</span><p><b>学习率</b> 每次走多大一步。</p></div><div><span>∂L</span><p><b>梯度</b> 误差变化的方向。</p></div></div></section>
+  </main>
+  <footer><span>BACKPROP LAB / MADE FOR CURIOUS MINDS</span><span class="mono">© 2026</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
